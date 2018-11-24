@@ -24,6 +24,7 @@ Kubeflow Pipelines are a new component of Kubeflow that can help you compose, de
  - katib
  - params.libsonnet
  - pytorch-operator
+ - seldon
  - spartakus
  - tf-job-operator
 
