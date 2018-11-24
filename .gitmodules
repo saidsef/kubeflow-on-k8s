@@ -2,3 +2,15 @@
 	path = examples
 	url = https://github.com/kubeflow/examples.git
 	branch = master
+[submodule "pipelines"]
+	path = pipelines
+	url = https://github.com/kubeflow/pipelines.git
+	branch = master
+[submodule "community"]
+	path = community
+	url = https://github.com/kubeflow/community.git
+	branch = master
+[submodule "example-seldon"]
+	path = example-seldon
+	url = https://github.com/kubeflow/example-seldon.git
+	branch = master
