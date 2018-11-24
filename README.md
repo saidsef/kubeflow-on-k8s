@@ -6,12 +6,26 @@ Kubeflow Pipelines are a new component of Kubeflow that can help you compose, de
  - [Getting Started Kubeflow Pipelines](https://cloud.google.com/blog/products/ai-machine-learning/getting-started-kubeflow-pipelines)
  - [Introducing Kubeflow Composable](https://kubernetes.io/blog/2017/12/introducing-kubeflow-composable/)
 
+# Kubeflow Version
+ - Kubeflow v0.3.3
+
 # Prerequisites
  - Git
  - Ksonnet
  - Golang
  - Kubernetes Cluster
  - Kubectl
+
+# Components
+ - ambassador
+ - argo
+ - centraldashboard
+ - jupyterhub
+ - katib
+ - params.libsonnet
+ - pytorch-operator
+ - spartakus
+ - tf-job-operator
 
 # Deployment
 
