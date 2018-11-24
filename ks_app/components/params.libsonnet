@@ -79,5 +79,15 @@
       reportUsage: false,
       usageId: '156657329',
     },
+    seldon: {
+      apifeServiceType: 'NodePort',
+      name: 'seldon',
+      namespace: 'null',
+      operatorJavaOpts: 'null',
+      operatorSpringOpts: 'null',
+      seldonVersion: '0.2.4',
+      withApife: 'false',
+      withRbac: 'true',
+    },
   },
 }
