@@ -1,4 +1,4 @@
-[submodule "vendor/examples"]
-	path = vendor/examples
-	url  = https://github.com/kubeflow/examples.git
+[submodule "examples"]
+	path = examples
+	url = https://github.com/kubeflow/examples.git
 	branch = master
