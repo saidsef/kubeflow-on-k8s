@@ -35,6 +35,7 @@ export KUBEFLOW_TAG=0.3.3
 export NAMESPACE=kubeflow
 
 git clone https://github.com/saidsef/kubeflow-on-k8s.git
+git submodule update --init --recursive
 
 cd kubeflow-on-k8s/
 mkdir -p /mnt/katib-mysql
