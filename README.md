@@ -38,7 +38,7 @@ git clone https://github.com/saidsef/kubeflow-on-k8s.git
 git submodule update --init --recursive
 
 cd kubeflow-on-k8s/
-mkdir -p /mnt/katib-mysql
+mkdir -p /mnt/{katib-mysql,kf-ml-data}
 kubectl apply -f ./deployment --namespace ${NAMESPACE}
 
 ks apply default --namespace ${NAMESPACE} # append `--dry-run` for dry run
