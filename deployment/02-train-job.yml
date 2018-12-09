@@ -1,0 +1,24 @@
+apiVersion: "batch/v1"
+kind: "Job"
+metadata: 
+  name: "sk-train"
+  namespace: "kubeflow"
+spec: 
+  template: 
+    metadata: 
+      name: "sk-train"
+    spec: 
+      containers: 
+        - 
+          image: "saidsef/ml-classifier:train"
+          name: "sk-train"
+          volumeMounts: 
+            - 
+              mountPath: "/app/data"
+              name: "persistent-storage"
+      restartPolicy: "Never"
+      volumes: 
+        - 
+          name: "persistent-storage"
+          persistentVolumeClaim: 
+            claimName: "kf-ml-data"

@@ -17,3 +17,22 @@ spec:
   persistentVolumeReclaimPolicy: Recycle
   hostPath:
     path: /mnt/katib-mysql
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kf-ml-data
+  namespace: kubeflow
+  labels:
+    app: kf-ml-data
+    component: storage
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: /mnt/kf-ml-data
