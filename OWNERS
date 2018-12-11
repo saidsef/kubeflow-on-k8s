@@ -2,3 +2,7 @@ reviewers:
 - saidsef
 approvers:
 - saidsef
+labels:
+- area/k8s
+- area/pipeline
+- area/bigdata
