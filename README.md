@@ -38,7 +38,7 @@ git clone https://github.com/saidsef/kubeflow-on-k8s.git
 
 cd kubeflow-on-k8s/
 
-git submodule update --init --recursive
+git submodule foreach git pull origin master
 
 mkdir -p /mnt/{katib-mysql,kf-ml-data}
 
