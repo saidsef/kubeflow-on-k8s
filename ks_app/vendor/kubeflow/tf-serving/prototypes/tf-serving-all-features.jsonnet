@@ -10,8 +10,7 @@ local k = import "k.libsonnet";
 local name = import "param://name";
 
 // updatedParams includes the namespace from env by default.
-// We can override namespace in params if needed
-local updatedParams = env + params;
+local updatedParams = params + env;
 
 local tfServingBase = import "kubeflow/tf-serving/tf-serving.libsonnet";
 local tfServing = tfServingBase {

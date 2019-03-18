@@ -7,7 +7,7 @@ Kubeflow Pipelines are a new component of Kubeflow that can help you compose, de
  - [Introducing Kubeflow Composable](https://kubernetes.io/blog/2017/12/introducing-kubeflow-composable/)
 
 # Kubeflow Version
- - Kubeflow v0.3.3
+ - Kubeflow v0.4.1
 
 # Prerequisites
  - Git
@@ -31,7 +31,7 @@ Kubeflow Pipelines are a new component of Kubeflow that can help you compose, de
 # Deployment
 
 ```shell
-export KUBEFLOW_TAG=0.3.3
+export KUBEFLOW_TAG=0.4.1
 export NAMESPACE=kubeflow
 
 git clone https://github.com/saidsef/kubeflow-on-k8s.git

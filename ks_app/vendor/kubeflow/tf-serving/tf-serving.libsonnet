@@ -10,7 +10,7 @@
     },
     modelName: $.params.name,
     modelPath: null,
-    modelStorageType: "cloud",
+    modelStorageType: "storageType",
 
     version: "v1",
     firstVersion: true,
@@ -26,8 +26,8 @@
     // in which case the image used will still depend on whether GPUs are used or not.
     // Users can also override modelServerImage in which case the user supplied value will always be used
     // regardless of numGpus.
-    defaultCpuImage: "tensorflow/serving:1.8.0",
-    defaultGpuImage: "tensorflow/serving:1.10.0-gpu",
+    defaultCpuImage: "tensorflow/serving:1.11.1",
+    defaultGpuImage: "tensorflow/serving:1.11.1-gpu",
     modelServerImage: if $.params.numGpus == 0 then
       $.params.defaultCpuImage
     else
@@ -37,8 +37,8 @@
     // Whether or not to enable s3 parameters
     s3Enable:: false,
 
-    // Which cloud to use
-    cloud:: null,
+    // Which storageType to use
+    storageType:: null,
   },
 
   // Parametes specific to GCP.
@@ -95,7 +95,7 @@
               $.s3parts.tfService,
               $.s3parts.tfDeployment,
             ]
-          else if $.params.cloud == "gcp" then
+          else if $.params.storageType == "gcp" then
             [
               $.gcpParts.tfService,
               $.gcpParts.tfDeployment,

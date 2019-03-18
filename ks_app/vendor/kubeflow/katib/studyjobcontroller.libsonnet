@@ -16,6 +16,7 @@
       },
       spec: {
         group: "kubeflow.org",
+        scope: "Namespaced",
         version: "v1alpha1",
         names: {
           kind: "StudyJob",
@@ -72,7 +73,6 @@
         apiVersion: "rbac.authorization.k8s.io/v1",
         metadata: {
           name: "metrics-collector",
-          namespace: namespace,
         },
         roleRef: {
           apiGroup: "rbac.authorization.k8s.io",
@@ -105,7 +105,7 @@
               namespace: {{.NameSpace}}  
             spec:
               schedule: "*/1 * * * *"
-              successfulJobsHistoryLimit: 1
+              successfulJobsHistoryLimit: 0
               failedJobsHistoryLimit: 1
               jobTemplate:
                 spec:
@@ -114,7 +114,7 @@
                       serviceAccountName: metrics-collector
                       containers:
                       - name: {{.WorkerID}}
-                        image: katib/metrics-collector
+                        image: %(mcimage)s
                         args:
                         - "./metricscollector"
                         - "-s"
@@ -123,10 +123,12 @@
                         - "{{.TrialID}}"
                         - "-w"
                         - "{{.WorkerID}}"
+                        - "-k"
+                        - "{{.WorkerKind}}"
                         - "-n"
                         - "{{.NameSpace}}"
                       restartPolicy: Never
-          |||,
+          ||| % { mcimage: params.metricsCollectorImage },
         },
       },
     ],
@@ -147,10 +149,7 @@
               "serviceaccounts",
             ],
             verbs: [
-              "create",
-              "update",
-              "list",
-              "watch",
+              "*",
             ],
           },
           {
@@ -188,6 +187,31 @@
               "*",
             ],
           },
+          {
+            apiGroups: [
+              "kubeflow.org",
+            ],
+            resources: [
+              "tfjobs",
+              "pytorchjobs",
+            ],
+            verbs: [
+              "*",
+            ],
+          },
+          {
+            apiGroups: [
+              "",
+            ],
+            resources: [
+              "pods",
+              "pods/log",
+              "pods/status",
+            ],
+            verbs: [
+              "*",
+            ],
+          },
         ],
       },
       {
@@ -203,7 +227,6 @@
         apiVersion: "rbac.authorization.k8s.io/v1",
         metadata: {
           name: "studyjob-controller",
-          namespace: namespace,
         },
         roleRef: {
           apiGroup: "rbac.authorization.k8s.io",
@@ -250,30 +273,6 @@
                   name: "studyjob-controller",
                   image: params.studyJobControllerImage,
                   imagePullPolicy: "Always",
-                  volumeMounts: [
-                    {
-                      name: "worker-template",
-                      mountPath: "/worker-template",
-                    },
-                    {
-                      name: "metricscollector-template",
-                      mountPath: "/metricscollector-template",
-                    },
-                  ],
-                },
-              ],
-              volumes: [
-                {
-                  name: "worker-template",
-                  configMap: {
-                    name: "worker-template",
-                  },
-                },
-                {
-                  name: "metricscollector-template",
-                  configMap: {
-                    name: "metricscollector-template",
-                  },
                 },
               ],
             },
@@ -302,6 +301,55 @@
                   containers:
                   - name: {{.WorkerID}}
                     image: alpine
+                  restartPolicy: Never
+          ||| % { ns: namespace },
+          "cpuWorkerTemplate.yaml": |||
+            apiVersion: batch/v1
+            kind: Job
+            metadata:
+              name: {{.WorkerID}}
+              namespace: %(ns)s
+            spec:
+              template:
+                spec:
+                  containers:
+                  - name: {{.WorkerID}}
+                    image: katib/mxnet-mnist-example
+                    command:
+                    - "python"
+                    - "/mxnet/example/image-classification/train_mnist.py"
+                    - "--batch-size=64"
+                    {{- with .HyperParameters}}
+                    {{- range .}}
+                    - "{{.Name}}={{.Value}}"
+                    {{- end}}
+                    {{- end}}
+                  restartPolicy: Never
+          ||| % { ns: namespace },
+          "gpuWorkerTemplate.yaml": |||
+            apiVersion: batch/v1
+            kind: Job
+            metadata:
+              name: {{.WorkerID}}
+              namespace: %(ns)s
+            spec:
+              template:
+                spec:
+                  containers:
+                  - name: {{.WorkerID}}
+                    image: katib/mxnet-mnist-example:gpu
+                    command:
+                    - "python"
+                    - "/mxnet/example/image-classification/train_mnist.py"
+                    - "--batch-size=64"
+                    {{- with .HyperParameters}}
+                    {{- range .}}
+                    - "{{.Name}}={{.Value}}"
+                    {{- end}}
+                    {{- end}}
+                    resources:
+                      limits:
+                        nvidia.com/gpu: 1
                   restartPolicy: Never
           ||| % { ns: namespace },
         },

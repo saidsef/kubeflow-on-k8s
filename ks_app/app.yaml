@@ -1,31 +1,52 @@
 apiVersion: 0.3.0
-environments:
-  default:
-    destination:
-      namespace: kubeflow
-      server: https://172.30.0.158:6443
-    k8sVersion: v1.12.2
-    path: default
 kind: ksonnet.io/app
 libraries:
+  kubeflow/application:
+    name: application
+    registry: kubeflow
+    version: ""
   kubeflow/argo:
     name: argo
     registry: kubeflow
     version: ""
-  kubeflow/core:
-    name: core
+  kubeflow/common:
+    name: common
     registry: kubeflow
     version: ""
   kubeflow/examples:
     name: examples
     registry: kubeflow
     version: ""
+  kubeflow/jupyter:
+    name: jupyter
+    registry: kubeflow
+    version: ""
   kubeflow/katib:
     name: katib
     registry: kubeflow
     version: ""
+  kubeflow/metacontroller:
+    name: metacontroller
+    registry: kubeflow
+    version: ""
+  kubeflow/modeldb:
+    name: modeldb
+    registry: kubeflow
+    version: ""
   kubeflow/mpi-job:
     name: mpi-job
+    registry: kubeflow
+    version: ""
+  kubeflow/openvino:
+    name: openvino
+    registry: kubeflow
+    version: ""
+  kubeflow/pipeline:
+    name: pipeline
+    registry: kubeflow
+    version: ""
+  kubeflow/profiles:
+    name: profiles
     registry: kubeflow
     version: ""
   kubeflow/pytorch-job:
@@ -40,12 +61,13 @@ libraries:
     name: tf-serving
     registry: kubeflow
     version: ""
+  kubeflow/tf-training:
+    name: tf-training
+    registry: kubeflow
+    version: ""
 name: ks_app
 registries:
-  incubator:
-    protocol: github
-    uri: github.com/ksonnet/parts/tree/master/incubator
   kubeflow:
     protocol: fs
-    uri: /mnt/tmp/kubeflow-0.3.3/kubeflow
+    uri: /mnt/cloud9/data/kf-src/kubeflow
 version: 0.0.1

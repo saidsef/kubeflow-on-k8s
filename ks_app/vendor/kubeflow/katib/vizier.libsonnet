@@ -5,9 +5,17 @@
     $.parts(params, namespace).dbService,
     $.parts(params, namespace).dbPVC,
     $.parts(params, namespace).dbDeployment,
+    $.parts(params, namespace).dbSecret,
     $.parts(params, namespace).clusterRole,
     $.parts(params, namespace).clusterRoleBinding,
     $.parts(params, namespace).serviceAccount,
+    $.parts(params, namespace).coreRestService,
+    $.parts(params, namespace).coreRestDeployment,
+    $.parts(params, namespace).uiService,
+    $.parts(params, namespace).uiDeployment,
+    $.parts(params, namespace).uiClusterRole,
+    $.parts(params, namespace).uiClusterRoleBinding,
+    $.parts(params, namespace).uiServiceAccount,
   ],
 
   parts(params, namespace):: {
@@ -27,7 +35,6 @@
         ports: [
           {
             name: "api",
-            nodePort: 30678,
             port: 6789,
             protocol: "TCP",
           },
@@ -62,26 +69,51 @@
             name: "vizier-core",
           },
           spec: {
+            serviceAccountName: "vizier-core",
             containers: [
               {
-                args: [
-                  "./vizier-manager",
-                  "-w",
-                  "kubernetes",
-                  "-i",
-                  "k-cluster.example.net",
-                ],
-                image: params.vizierCoreImage,
                 name: "vizier-core",
-                ports: [
+                image: params.vizierCoreImage,
+                env: [
                   {
-                    containerPort: 6789,
-                    name: "api",
+                    name: "MYSQL_ROOT_PASSWORD",
+                    valueFrom: {
+                      secretKeyRef: {
+                        name: "vizier-db-secrets",
+                        key: "MYSQL_ROOT_PASSWORD",
+                      },
+                    },
                   },
                 ],
+                command: [
+                  "./vizier-manager",
+                ],
+                ports: [
+                  {
+                    name: "api",
+                    containerPort: 6789,
+                  },
+                ],
+                readinessProbe: {
+                  exec: {
+                    command: [
+                      "/bin/grpc_health_probe",
+                      "-addr=:6789",
+                    ],
+                  },
+                  initialDelaySeconds: 5,
+                },
+                livenessProbe: {
+                  exec: {
+                    command: [
+                      "/bin/grpc_health_probe",
+                      "-addr=:6789",
+                    ],
+                  },
+                  initialDelaySeconds: 10,
+                },
               },
             ],
-            serviceAccountName: "vizier-core",
           },
         },
       },
@@ -107,7 +139,7 @@
       ],
     },
 
-    clusterRole:: {
+    clusterRole: {
       apiVersion: "rbac.authorization.k8s.io/v1beta1",
       kind: "ClusterRole",
       metadata: {
@@ -188,10 +220,9 @@
       kind: "PersistentVolumeClaim",
       metadata: {
         labels: {
-          app: "vizier",
-          component: "db",
+          app: "katib",
         },
-        name: "vizier-db",
+        name: "katib-mysql",
         namespace: namespace,
       },
       spec: {
@@ -230,10 +261,17 @@
           spec: {
             containers: [
               {
+                name: "vizier-db",
+                image: params.vizierDbImage,
                 env: [
                   {
                     name: "MYSQL_ROOT_PASSWORD",
-                    value: "test",
+                    valueFrom: {
+                      secretKeyRef: {
+                        name: "vizier-db-secrets",
+                        key: "MYSQL_ROOT_PASSWORD",
+                      },
+                    },
                   },
                   {
                     name: "MYSQL_ALLOW_EMPTY_PASSWORD",
@@ -244,32 +282,41 @@
                     value: "vizier",
                   },
                 ],
-                image: params.vizierDbImage,
-                name: "vizier-db",
-                // If we mount block device with ext4 fs as pvc, default data dir has lost+found dir in, and mysql fails to init
+                ports: [
+                  {
+                    name: "dbapi",
+                    containerPort: 3306,
+                  },
+                ],
+                readinessProbe: {
+                  exec: {
+                    command: [
+                      "/bin/bash",
+                      "-c",
+                      "mysql -D $$MYSQL_DATABASE -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1'",
+                    ],
+                  },
+                  initialDelaySeconds: 5,
+                  periodSeconds: 2,
+                  timeoutSeconds: 1,
+                },
                 args: [
                   "--datadir",
                   "/var/lib/mysql/datadir",
                 ],
                 volumeMounts: [
                   {
-                    name: "vizier-db",
+                    name: "katib-mysql",
                     mountPath: "/var/lib/mysql",
-                  },
-                ],
-                ports: [
-                  {
-                    containerPort: 3306,
-                    name: "dbapi",
                   },
                 ],
               },
             ],
             volumes: [
               {
-                name: "vizier-db",
+                name: "katib-mysql",
                 persistentVolumeClaim: {
-                  claimName: "vizier-db",
+                  claimName: "katib-mysql",
                 },
               },
             ],
@@ -305,5 +352,230 @@
       },
     },  // dbService
 
+    dbSecret: {
+      apiVersion: "v1",
+      kind: "Secret",
+      type: "Opaque",
+      metadata: {
+        name: "vizier-db-secrets",
+        namespace: namespace,
+      },
+      data: {
+        MYSQL_ROOT_PASSWORD: "dGVzdA==",
+      },
+    },  // dbSecret
+
+    coreRestService: {
+      apiVersion: "v1",
+      kind: "Service",
+      metadata: {
+        labels: {
+          app: "vizier",
+          component: "core-rest",
+        },
+        name: "vizier-core-rest",
+        namespace: namespace,
+      },
+      spec: {
+        ports: [
+          {
+            name: "api",
+            port: 80,
+            protocol: "TCP",
+          },
+        ],
+        selector: {
+          app: "vizier",
+          component: "core-rest",
+        },
+        type: "ClusterIP",
+      },
+    },  // uiService
+
+    coreRestDeployment: {
+      apiVersion: "extensions/v1beta1",
+      kind: "Deployment",
+      metadata: {
+        labels: {
+          app: "vizier",
+          component: "core-rest",
+        },
+        name: "vizier-core-rest",
+        namespace: namespace,
+      },
+      spec: {
+        replicas: 1,
+        template: {
+          metadata: {
+            labels: {
+              app: "vizier",
+              component: "core-rest",
+            },
+            name: "vizier-core-rest",
+          },
+          spec: {
+            containers: [
+              {
+                command: [
+                  "./vizier-manager-rest",
+                ],
+                image: params.vizierCoreRestImage,
+                name: "vizier-core-rest",
+                ports: [
+                  {
+                    containerPort: 80,
+                    name: "api",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    },  // coreRestDeployment
+
+
+    uiService: {
+      apiVersion: "v1",
+      kind: "Service",
+      metadata: {
+        labels: {
+          app: "vizier",
+          component: "ui",
+        },
+        name: "katib-ui",
+        namespace: namespace,
+        annotations: {
+          "getambassador.io/config":
+            std.join("\n", [
+              "---",
+              "apiVersion: ambassador/v0",
+              "kind:  Mapping",
+              "name: katib-ui-mapping",
+              "prefix: /katib/",
+              "rewrite: /katib/",
+              "service: katib-ui." + namespace,
+            ]),
+        },  //annotations
+      },
+      spec: {
+        ports: [
+          {
+            name: "ui",
+            port: 80,
+            protocol: "TCP",
+          },
+        ],
+        selector: {
+          app: "vizier",
+          component: "ui",
+        },
+        type: "ClusterIP",
+      },
+    },  // uiService
+
+    uiDeployment: {
+      apiVersion: "extensions/v1beta1",
+      kind: "Deployment",
+      metadata: {
+        labels: {
+          app: "vizier",
+          component: "ui",
+        },
+        name: "katib-ui",
+        namespace: namespace,
+      },
+      spec: {
+        replicas: 1,
+        template: {
+          metadata: {
+            labels: {
+              app: "vizier",
+              component: "ui",
+            },
+            name: "katib-ui",
+          },
+          spec: {
+            serviceAccountName: "katib-ui",
+            containers: [
+              {
+                command: [
+                  "./katib-ui",
+                ],
+                image: params.katibUIImage,
+                name: "katib-ui",
+                ports: [
+                  {
+                    containerPort: 80,
+                    name: "ui",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    },  // uiDeployment
+
+    uiClusterRole: {
+      apiVersion: "rbac.authorization.k8s.io/v1",
+      kind: "ClusterRole",
+      metadata: {
+        name: "katib-ui",
+      },
+      rules: [
+        {
+          apiGroups: [
+            "",
+          ],
+          resources: [
+            "configmaps",
+          ],
+          verbs: [
+            "*",
+          ],
+        },
+        {
+          apiGroups: [
+            "kubeflow.org",
+          ],
+          resources: [
+            "studyjobs",
+          ],
+          verbs: [
+            "*",
+          ],
+        },
+      ],
+    },  // uiClusterRole
+
+    uiClusterRoleBinding: {
+      apiVersion: "rbac.authorization.k8s.io/v1",
+      kind: "ClusterRoleBinding",
+      metadata: {
+        name: "katib-ui",
+      },
+      roleRef: {
+        apiGroup: "rbac.authorization.k8s.io",
+        kind: "ClusterRole",
+        name: "katib-ui",
+      },
+      subjects: [
+        {
+          kind: "ServiceAccount",
+          name: "katib-ui",
+          namespace: namespace,
+        },
+      ],
+    },  // uiClusterRoleBinding
+
+    uiServiceAccount: {
+      apiVersion: "v1",
+      kind: "ServiceAccount",
+      metadata: {
+        name: "katib-ui",
+        namespace: namespace,
+      },
+    },  // uiServiceAccount
   },  //parts
 }
