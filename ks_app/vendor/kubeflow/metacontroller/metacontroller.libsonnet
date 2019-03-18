@@ -142,16 +142,6 @@
                   },
                 ],
                 imagePullPolicy: "Always",
-                resources: {
-                  limits: {
-                    cpu: "4",
-                    memory: "4Gi",
-                  },
-                  requests: {
-                    cpu: "500m",
-                    memory: "1Gi",
-                  },
-                },
                 securityContext: {
                   privileged: true,
                   allowPrivilegeEscalation: true,

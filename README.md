@@ -40,7 +40,7 @@ cd kubeflow-on-k8s/
 
 git submodule foreach git pull origin master
 
-mkdir -p /mnt/{katib-mysql,kf-ml-data}
+mkdir -p /mnt/{katib-mysql,kf-ml-data,kf-openvino,kf-minio}
 
 kubectl apply -f ./deployment --namespace ${NAMESPACE}
 

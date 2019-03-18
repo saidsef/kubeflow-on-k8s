@@ -57,14 +57,7 @@
           name: "nfs",
           mountPath: params.pvcMount,
         },
-      ]) +
-      container.mixin.resources.withLimitsMixin({
-        memory: "4Gi",
-        cpu: "4",
-      }).withRequestsMixin({
-        memory: "1Gi",
-        cpu: "1",
-      }),
+      ]),
 
     local ovDeployment =
       deployment.new(
@@ -82,7 +75,7 @@
           [{
             name: "nfs",
             persistentVolumeClaim: {
-              claimName: params.pvc,
+              claimName: "openvino-pv-claim",
             },
           }]
         else [],

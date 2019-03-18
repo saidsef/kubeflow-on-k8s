@@ -2,18 +2,67 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
+  name: openvino-pv-claim
+  namespace: kubeflow
+  labels:
+    app: openvino
+    component: storage
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: /mnt/kf-openvino
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openvino-pv-claim
+  namespace: kubeflow
+  labels:
+    app: openvino
+    component: storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  volumeMode: Filesystem
+  volumeName: openvino-pv-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: minio-pv-claim
+  namespace: kubeflow
+  labels:
+    app: minio
+    component: storage
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  hostPath:
+    path: /mnt/kf-minio
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
   name: katib-mysql
   namespace: kubeflow
   labels:
-    app: vizier
+    app: katib
     component: db
 spec:
   capacity:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
-    - ReadOnlyMany
-    - ReadWriteMany
   persistentVolumeReclaimPolicy: Recycle
   hostPath:
     path: /mnt/katib-mysql
@@ -31,8 +80,6 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
-    - ReadOnlyMany
-    - ReadWriteMany
   persistentVolumeReclaimPolicy: Recycle
   hostPath:
     path: /mnt/kf-ml-data
